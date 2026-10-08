@@ -1,0 +1,262 @@
+{
+  "applications": [
+    {
+      "id": "app-1791434635748-u6f1",
+      "company": "Luckin",
+      "role": "AI Solutions Specialist (Junior)",
+      "status": "applied",
+      "location": "",
+      "salary": "",
+      "jobUrl": "https://my.hiredly.com/jobs/jobs-malaysia-luckin-coffee-malaysia-job-ai-solutions-specialist-junior?origin=job_list",
+      "appliedDate": "2026-10-08T00:00:00.000Z",
+      "lastContactDate": "2026-10-08T00:00:00.000Z",
+      "notes": "",
+      "contactName": "",
+      "contactEmail": "",
+      "resumeVersion": "Main Resume",
+      "source": "LinkedIn",
+      "interviews": [],
+      "assessments": [],
+      "emailThreads": [],
+      "followUpHistory": [],
+      "autoFollowUpAlertSent": false,
+      "autoNoResponseTriggered": false,
+      "createdAt": "2026-10-08T04:43:55.748Z"
+    },
+    {
+      "id": "app-1791434563331-9ewr",
+      "company": "Astro",
+      "role": "Associate, Software Fullstack Engineer",
+      "status": "applied",
+      "location": "",
+      "salary": "",
+      "jobUrl": "https://astro.wd3.myworkdayjobs.com/en-US/Astro_Careers/job/Associate--Software-Fullstack-Engineer_JR09681",
+      "appliedDate": "2026-10-08T00:00:00.000Z",
+      "lastContactDate": "2026-10-08T00:00:00.000Z",
+      "notes": "",
+      "contactName": "",
+      "contactEmail": "",
+      "resumeVersion": "Main Resume",
+      "source": "LinkedIn",
+      "interviews": [],
+      "assessments": [],
+      "emailThreads": [],
+      "followUpHistory": [],
+      "autoFollowUpAlertSent": false,
+      "autoNoResponseTriggered": false,
+      "createdAt": "2026-10-08T04:42:43.331Z"
+    }
+  ],
+  "settings": {
+    "alertEmail": "kuik0224@gmail.com",
+    "followUpThresholdWorkingDays": 5,
+    "noResponseThresholdCalendarDays": 14,
+    "autoSendFollowUpAlerts": true,
+    "autoMarkNoResponse": true,
+    "smtpHost": "smtp.gmail.com",
+    "smtpPort": 587,
+    "smtpUser": "kuik0224@gmail.com",
+    "smtpPass": "prgi wats glwv nwlu",
+    "smtpSecure": false,
+    "imapHost": "imap.gmail.com",
+    "imapPort": 993,
+    "imapUser": "",
+    "imapPass": "",
+    "theme": "dark"
+  },
+  "alerts": [
+    {
+      "id": "alert-1791432685098",
+      "sentAt": "2026-10-08T04:11:25.098Z",
+      "recipient": "candidate@example.com",
+      "subject": "⚠️ Action Required: Follow up with Dropbox (Backend Infrastructure Engineer) - 5 Working Days No Response",
+      "appId": "app-4",
+      "company": "Dropbox",
+      "workingDaysElapsed": 14,
+      "htmlPreview": "\n      <!DOCTYPE html>\n      <html>\n      <head>\n        <meta charset=\"utf-8\">\n        <style>\n          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; color: #f8fafc; padding: 20px; }\n          .container { max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 12px; border: 1px solid #334155; overflow: hidden; }\n          .header { background: linear-gradient(135deg, #0284c7, #6366f1); padding: 24px; text-align: center; }\n          .header h1 { margin: 0; color: #ffffff; font-size: 20px; font-weight: 700; }\n          .content { padding: 24px; line-height: 1.6; }\n          .badge { display: inline-block; background: #f59e0b; color: #000; font-weight: 700; padding: 4px 10px; border-radius: 9999px; font-size: 12px; margin-bottom: 12px; }\n          .card { background: #0f172a; border-radius: 8px; padding: 16px; border: 1px solid #334155; margin: 16px 0; }\n          .btn { display: inline-block; background: #0284c7; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; margin-top: 12px; }\n          .footer { padding: 16px 24px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; }\n        </style>\n      </head>\n      <body>\n        <div class=\"container\">\n          <div class=\"header\">\n            <h1>CareerPilot Application Alert</h1>\n          </div>\n          <div class=\"content\">\n            <span class=\"badge\">14 WORKING DAYS ELAPSED</span>\n            <h2 style=\"margin-top: 0; color: #38bdf8;\">Follow-Up Recommended</h2>\n            <p>You haven't received an update for your application at <strong>Dropbox</strong> in <strong>14 working days</strong>.</p>\n            \n            <div class=\"card\">\n              <p style=\"margin: 4px 0;\"><strong>Company:</strong> Dropbox</p>\n              <p style=\"margin: 4px 0;\"><strong>Role:</strong> Backend Infrastructure Engineer</p>\n              <p style=\"margin: 4px 0;\"><strong>Current Status:</strong> <span style=\"text-transform: capitalize; color: #38bdf8;\">no response</span></p>\n              <p style=\"margin: 4px 0;\"><strong>Applied Date:</strong> 18/09/2026</p>\n              <p style=\"margin: 4px 0;\"><strong>Contact:</strong> Dropbox Recruiting (talent@dropbox.com)</p>\n            </div>\n\n            <p style=\"color: #cbd5e1; font-size: 14px;\">Sending a polite, concise follow-up email increases your response rate by up to 40%.</p>\n            \n            <div style=\"margin-top: 20px; text-align: center;\">\n              <a href=\"http://localhost:5173\" class=\"btn\">Open Job Tracker & Send Follow-up</a>\n            </div>\n          </div>\n          <div class=\"footer\">\n            Tracked automatically by TrackApply Pro • Configured alert threshold: 5 working days\n          </div>\n        </div>\n      </body>\n      </html>\n    ",
+      "mode": "local_sandbox",
+      "status": "simulated_and_stored"
+    },
+    {
+      "id": "alert-1791432685095",
+      "sentAt": "2026-10-08T04:11:25.095Z",
+      "recipient": "candidate@example.com",
+      "subject": "⚠️ Action Required: Follow up with Airbnb (Staff Frontend Engineer) - 5 Working Days No Response",
+      "appId": "app-3",
+      "company": "Airbnb",
+      "workingDaysElapsed": 8,
+      "htmlPreview": "\n      <!DOCTYPE html>\n      <html>\n      <head>\n        <meta charset=\"utf-8\">\n        <style>\n          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; color: #f8fafc; padding: 20px; }\n          .container { max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 12px; border: 1px solid #334155; overflow: hidden; }\n          .header { background: linear-gradient(135deg, #0284c7, #6366f1); padding: 24px; text-align: center; }\n          .header h1 { margin: 0; color: #ffffff; font-size: 20px; font-weight: 700; }\n          .content { padding: 24px; line-height: 1.6; }\n          .badge { display: inline-block; background: #f59e0b; color: #000; font-weight: 700; padding: 4px 10px; border-radius: 9999px; font-size: 12px; margin-bottom: 12px; }\n          .card { background: #0f172a; border-radius: 8px; padding: 16px; border: 1px solid #334155; margin: 16px 0; }\n          .btn { display: inline-block; background: #0284c7; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; margin-top: 12px; }\n          .footer { padding: 16px 24px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; }\n        </style>\n      </head>\n      <body>\n        <div class=\"container\">\n          <div class=\"header\">\n            <h1>CareerPilot Application Alert</h1>\n          </div>\n          <div class=\"content\">\n            <span class=\"badge\">8 WORKING DAYS ELAPSED</span>\n            <h2 style=\"margin-top: 0; color: #38bdf8;\">Follow-Up Recommended</h2>\n            <p>You haven't received an update for your application at <strong>Airbnb</strong> in <strong>8 working days</strong>.</p>\n            \n            <div class=\"card\">\n              <p style=\"margin: 4px 0;\"><strong>Company:</strong> Airbnb</p>\n              <p style=\"margin: 4px 0;\"><strong>Role:</strong> Staff Frontend Engineer</p>\n              <p style=\"margin: 4px 0;\"><strong>Current Status:</strong> <span style=\"text-transform: capitalize; color: #38bdf8;\">applied</span></p>\n              <p style=\"margin: 4px 0;\"><strong>Applied Date:</strong> 28/09/2026</p>\n              <p style=\"margin: 4px 0;\"><strong>Contact:</strong> Jessica Wu (Lead Recruiter) (jessica.wu@airbnb.com)</p>\n            </div>\n\n            <p style=\"color: #cbd5e1; font-size: 14px;\">Sending a polite, concise follow-up email increases your response rate by up to 40%.</p>\n            \n            <div style=\"margin-top: 20px; text-align: center;\">\n              <a href=\"http://localhost:5173\" class=\"btn\">Open Job Tracker & Send Follow-up</a>\n            </div>\n          </div>\n          <div class=\"footer\">\n            Tracked automatically by TrackApply Pro • Configured alert threshold: 5 working days\n          </div>\n        </div>\n      </body>\n      </html>\n    ",
+      "mode": "local_sandbox",
+      "status": "simulated_and_stored"
+    }
+  ],
+  "activityLogs": [
+    {
+      "id": "log-1791441513198-ugfr",
+      "timestamp": "2026-10-08T06:38:33.198Z",
+      "type": "deleted",
+      "message": "Deleted application for Dropbox",
+      "appId": "app-4"
+    },
+    {
+      "id": "log-1791441508575-6nld",
+      "timestamp": "2026-10-08T06:38:28.575Z",
+      "type": "deleted",
+      "message": "Deleted application for Figma",
+      "appId": "app-6"
+    },
+    {
+      "id": "log-1791441504183-512y",
+      "timestamp": "2026-10-08T06:38:24.183Z",
+      "type": "deleted",
+      "message": "Deleted application for Stripe",
+      "appId": "app-1"
+    },
+    {
+      "id": "log-1791441500991-p0k7",
+      "timestamp": "2026-10-08T06:38:20.991Z",
+      "type": "deleted",
+      "message": "Deleted application for Apple",
+      "appId": "app-1791434305200-j48e"
+    },
+    {
+      "id": "log-1791441496655-n1vp",
+      "timestamp": "2026-10-08T06:38:16.655Z",
+      "type": "deleted",
+      "message": "Deleted application for Amazon",
+      "appId": "app-2"
+    },
+    {
+      "id": "log-1791441492853-jvzn",
+      "timestamp": "2026-10-08T06:38:12.853Z",
+      "type": "deleted",
+      "message": "Deleted application for Anthropic",
+      "appId": "app-1791434305187-9h6u"
+    },
+    {
+      "id": "log-1791441469276-idb0",
+      "timestamp": "2026-10-08T06:37:49.276Z",
+      "type": "deleted",
+      "message": "Deleted application for Datadog",
+      "appId": "app-5"
+    },
+    {
+      "id": "log-1791441465660-007y",
+      "timestamp": "2026-10-08T06:37:45.660Z",
+      "type": "deleted",
+      "message": "Deleted application for Airbnb",
+      "appId": "app-3"
+    },
+    {
+      "id": "log-1791436381737-gykb",
+      "timestamp": "2026-10-08T05:13:01.737Z",
+      "type": "deleted",
+      "message": "Deleted application for TestToDelete Co",
+      "appId": "app-1791436381729-1gib"
+    },
+    {
+      "id": "log-1791436381729-asnz",
+      "timestamp": "2026-10-08T05:13:01.729Z",
+      "type": "created",
+      "message": "Added application for Test Role at TestToDelete Co",
+      "appId": "app-1791436381729-1gib"
+    },
+    {
+      "id": "log-1791434635748-6sip",
+      "timestamp": "2026-10-08T04:43:55.748Z",
+      "type": "created",
+      "message": "Added application for AI Solutions Specialist (Junior) at Luckin",
+      "appId": "app-1791434635748-u6f1"
+    },
+    {
+      "id": "log-1791434563331-vcu3",
+      "timestamp": "2026-10-08T04:42:43.331Z",
+      "type": "created",
+      "message": "Added application for Associate, Software Fullstack Engineer at Astro",
+      "appId": "app-1791434563331-9ewr"
+    },
+    {
+      "id": "log-1791434305202-ltqi",
+      "timestamp": "2026-10-08T04:38:25.202Z",
+      "type": "email_app_created",
+      "message": "Auto-created job application for Apple from parsed email",
+      "appId": "app-1791434305200-j48e"
+    },
+    {
+      "id": "log-1791434305201-lvms",
+      "timestamp": "2026-10-08T04:38:25.201Z",
+      "type": "interview_added",
+      "message": "Added technical screen for Apple",
+      "appId": "app-1791434305200-j48e"
+    },
+    {
+      "id": "log-1791434305200-ht9t",
+      "timestamp": "2026-10-08T04:38:25.200Z",
+      "type": "created",
+      "message": "Added application for Software Engineer at Apple",
+      "appId": "app-1791434305200-j48e"
+    },
+    {
+      "id": "log-1791434305199-jwho",
+      "timestamp": "2026-10-08T04:38:25.199Z",
+      "type": "email_received",
+      "message": "Received and parsed recruiter email: \"Apple Technical Interview Invitation: Software Engineer\"",
+      "appId": null
+    },
+    {
+      "id": "log-1791434305195-r8zi",
+      "timestamp": "2026-10-08T04:38:25.195Z",
+      "type": "assessment_added",
+      "message": "Added AI Canvas Take-Home Project for Anthropic",
+      "appId": "app-1791434305187-9h6u"
+    },
+    {
+      "id": "log-1791434305192-flg8",
+      "timestamp": "2026-10-08T04:38:25.192Z",
+      "type": "interview_added",
+      "message": "Added Round 2: Technical Coding & Next.js for Anthropic",
+      "appId": "app-1791434305187-9h6u"
+    },
+    {
+      "id": "log-1791434305190-i37p",
+      "timestamp": "2026-10-08T04:38:25.190Z",
+      "type": "interview_added",
+      "message": "Added Round 1: Recruiter Phone Screen for Anthropic",
+      "appId": "app-1791434305187-9h6u"
+    },
+    {
+      "id": "log-1791434305187-cfhc",
+      "timestamp": "2026-10-08T04:38:25.187Z",
+      "type": "created",
+      "message": "Added application for Senior AI Frontend Engineer at Anthropic",
+      "appId": "app-1791434305187-9h6u"
+    },
+    {
+      "id": "log-1791432685099-qa30",
+      "timestamp": "2026-10-08T04:11:25.099Z",
+      "type": "alert_triggered",
+      "message": "Sent 5-working-day follow-up alert email for Dropbox",
+      "appId": "app-4"
+    },
+    {
+      "id": "log-1791432685097-o89p",
+      "timestamp": "2026-10-08T04:11:25.098Z",
+      "type": "alert_triggered",
+      "message": "Sent 5-working-day follow-up alert email for Airbnb",
+      "appId": "app-3"
+    },
+    {
+      "id": "log-1791432685092-m6ow",
+      "timestamp": "2026-10-08T04:11:25.093Z",
+      "type": "auto_status",
+      "message": "Automatically marked as 'No response' after 2 weeks (19 calendar days) without recruiter contact.",
+      "appId": "app-4"
+    },
+    {
+      "id": "log-init",
+      "timestamp": "2026-10-08T04:11:23.092Z",
+      "type": "system",
+      "message": "Job Application Platform initialized with seed records."
+    }
+  ]
+}

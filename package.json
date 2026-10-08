@@ -1,0 +1,32 @@
+{
+  "name": "jobapplication-platform",
+  "version": "1.0.0",
+  "description": "Smart Job Application Tracker with Email Progress Tracking, 5-Day Alerts, Multi-round Interviews & Assessments",
+  "main": "server/server.js",
+  "scripts": {
+    "server": "node server/server.js",
+    "client": "npm.cmd --prefix client run dev",
+    "dev": "concurrently --kill-others \"node server/server.js\" \"npm.cmd --prefix client run dev\"",
+    "build": "npm.cmd --prefix client run build",
+    "start": "node server/server.js"
+  },
+  "keywords": [
+    "job-tracker",
+    "application-tracking",
+    "email-sync",
+    "interview-scheduler",
+    "assessment-tracker"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^9.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mailparser": "^3.7.2",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.10.0",
+    "sqlite3": "^6.0.1"
+  }
+}
