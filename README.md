@@ -42,9 +42,27 @@ A comprehensive, production-ready platform designed to track job applications, a
 
 ## 🛠️ Architecture & Tech Stack
 
-- **Frontend**: React 19, Vite, Tailwind CSS v4, Lucide Icons, Canvas Confetti.
-- **Backend**: Node.js, Express, Node-Cron background rules engine, Nodemailer, Smart Email Parser with regex & entity extraction.
-- **Storage**: Persistent JSON database with atomic writes (`server/data.json`).
+| Layer        | Technology                                                                  |
+| ------------ | --------------------------------------------------------------------------- |
+| **Frontend** | React 19, Vite, Tailwind CSS v4, Lucide Icons, Canvas Confetti              |
+| **Backend**  | Node.js, Express, Node-Cron (background rules engine), Nodemailer           |
+| **Database** | **SQLite** (via `sqlite3` npm package) — file: `server/database.sqlite`     |
+| **Email**    | Nodemailer (SMTP outbound), Smart Email Parser (regex + entity extraction)  |
+
+### Database Schema (SQLite)
+
+The SQLite database (`server/database.sqlite`) consists of **8 relational tables**:
+
+| Table              | Purpose                                                         |
+| ------------------ | --------------------------------------------------------------- |
+| `applications`     | Core job application records (company, role, status, dates)     |
+| `interviews`       | Multi-round interview sessions linked to each application       |
+| `assessments`      | Take-home tests & online assessments linked to each application |
+| `email_threads`    | Parsed recruiter email records                                  |
+| `followup_history` | Follow-up email history per application                         |
+| `settings`         | Key-value app settings (alert email, thresholds, SMTP config)   |
+| `alerts`           | Log of all auto-dispatched follow-up alert emails               |
+| `activity_logs`    | Chronological audit log for all application events              |
 
 ---
 
@@ -61,3 +79,61 @@ A comprehensive, production-ready platform designed to track job applications, a
 3. **Individual Commands:**
    - Backend only: `node server/server.js`
    - Frontend only: `npm --prefix client run dev`
+
+---
+
+## 🗄️ Viewing the Database in DBeaver
+
+DBeaver is a free, universal database tool that can open and browse the SQLite file visually.
+
+### Step 1 — Download & Install DBeaver
+1. Go to [https://dbeaver.io/download/](https://dbeaver.io/download/) and download the **Community Edition** (free).
+2. Run the installer and follow the on-screen steps.
+
+### Step 2 — Create a New SQLite Connection
+1. Open DBeaver.
+2. Click **"New Database Connection"** (the plug icon in the top-left toolbar, or press `Ctrl+Shift+N`).
+3. In the **"Select your database"** dialog, search for **SQLite** and select it, then click **Next**.
+
+### Step 3 — Point to the Database File
+1. In the **Connection Settings** panel, click the **"Open..."** button next to the *Path* field.
+2. Navigate to your project folder and select:
+   ```
+   C:\JobApplication\server\database.sqlite
+   ```
+3. Click **Finish**. DBeaver may prompt you to download the SQLite JDBC driver — click **Download** to install it automatically.
+
+### Step 4 — Browse the Data
+1. In the **Database Navigator** panel (left sidebar), expand your new connection.
+2. Expand: `database.sqlite` → `Tables`.
+3. You will see all 8 tables listed:
+   - `applications`, `interviews`, `assessments`, `email_threads`, `followup_history`, `settings`, `alerts`, `activity_logs`
+4. **Double-click any table** to open the Data viewer and see all records in a spreadsheet-style grid.
+5. You can also run SQL queries by right-clicking the connection → **SQL Editor → Open SQL Script**, and typing:
+   ```sql
+   SELECT * FROM applications;
+   SELECT * FROM interviews WHERE application_id = 'your-id-here';
+   SELECT * FROM alerts ORDER BY sent_at DESC;
+   ```
+
+### Step 5 — Refresh After App Updates
+- After the Node.js server writes new records, press **F5** (or right-click the table → **Refresh**) in DBeaver to see the latest data.
+
+> **Note:** The SQLite file is at `server/database.sqlite` in the project root. SQLite handles concurrent reads gracefully, so you can browse while the server is running.
+
+---
+
+## ⚙️ Email Alert Setup (Optional)
+
+To enable real email alerts:
+
+1. Go to the **Settings** tab in the app.
+2. Enter your **Recipient Email** (where you want to receive follow-up reminders).
+3. Enable **SMTP** and fill in:
+   - **SMTP Host**: e.g. `smtp.gmail.com`
+   - **SMTP Port**: `587`
+   - **Sender Email**: Your Gmail address
+   - **App Password**: Generate one at [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) *(requires 2FA enabled)*
+
+> You can use the **same email** for both Sender and Recipient (send alerts to yourself).
+> Without SMTP credentials, alerts are still logged in the database but no actual email is dispatched.
