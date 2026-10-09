@@ -107,6 +107,8 @@ Express server, SQLite file, cron scheduler, or IMAP/SMTP worker. Deploy the two
    Render, Railway, or Fly.io. Set `NODE_ENV=production`, `AUTH_USERNAME`,
    `AUTH_PASSWORD_HASH`, `SESSION_SECRET`, and `CLIENT_ORIGIN` to the exact Netlify URL.
    Use a persistent disk for `server/database.sqlite`; otherwise redeploys can erase data.
+   The repository includes an `.npmrc` setting that compiles the native `sqlite3` module
+   on the deployment host, avoiding incompatible prebuilt GLIBC binaries.
 2. **Frontend:** connect the repository to Netlify. The included `netlify.toml` builds
    `client` and publishes `client/dist`. Add the Netlify environment variable
    `VITE_API_URL` with the public HTTPS URL of the backend (without `/api`).
