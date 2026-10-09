@@ -6,8 +6,8 @@ function extractDomainCompany(fromAddress = '') {
   if (!match) return '';
   const domain = match[1].toLowerCase();
   // Filter common generic providers
-  const genericProviders = ['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com', 'proton.me', 'greenhouse-mail.io', 'lever.co', 'workday.com', 'ashbyhq.com', 'smartrecruiters.com', 'breezy.hr', 'hirevue.com'];
-  if (genericProviders.includes(domain)) return '';
+  const genericProviders = ['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com', 'proton.me', 'greenhouse-mail.io', 'lever.co', 'workday.com', 'ashbyhq.com', 'smartrecruiters.com', 'breezy.hr', 'hirevue.com', 'mokahr.com'];
+  if (genericProviders.some(provider => domain === provider || domain.endsWith(`.${provider}`))) return '';
   
   // Extract company part from domain, e.g. stripe.com -> Stripe, careers.google.com -> Google
   const parts = domain.split('.');
@@ -39,6 +39,7 @@ function parseEmail(email) {
       /(?:at|with|from)\s+([A-Z][a-zA-Z0-9&.\s]{2,20}?)(?:\s+for|\s+team|\s+careers|\s+recruiting|[,\.!\?])/i,
       /([A-Z][a-zA-Z0-9&.\s]{2,20}?)\s+(?:Careers|Recruiting|Team|Talent|Hiring)/i,
       /Application to\s+([A-Z][a-zA-Z0-9&.\s]{2,20})/i,
+      /(?:interview invitations?|application (?:form|update|status))\s+from\s+([A-Z][a-zA-Z0-9&.\s]{2,40})$/i,
     ];
     for (const regex of companyMatches) {
       const match = subject.match(regex) || body.match(regex);
@@ -112,7 +113,7 @@ function parseEmail(email) {
 
     interviewDetails = {
       roundName: roundNameMatch ? roundNameMatch[1] : (suggestedStatus === 'phone screening' ? 'Phone Screening' : 'Technical Interview'),
-      scheduledAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + 'T14:00:00', // suggested default date
+      scheduledAt: '',
       duration: '45 mins',
       meetingLink: meetMatch ? meetMatch[0] : '',
       interviewers: from.split('<')[0].replace(/"/g, '').trim() || 'Hiring Team',

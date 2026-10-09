@@ -367,8 +367,16 @@ async function executeEmailAutoSync() {
 
     // Find a matching application by company name (case-insensitive)
     const companyLower = (parsed.extractedCompany || '').toLowerCase();
+    const normalizedCompany = companyLower.replace(/[^a-z0-9]/g, '');
     const matchedApp = allApps.find(
-      a => a.company.toLowerCase() === companyLower && !terminalStatuses.includes(a.status)
+        a => {
+          if (terminalStatuses.includes(a.status)) return false;
+          const normalizedAppCompany = a.company.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return normalizedAppCompany === normalizedCompany ||
+            (normalizedAppCompany.length >= 4 &&
+              (normalizedCompany.includes(normalizedAppCompany) ||
+                normalizedAppCompany.includes(normalizedCompany)));
+        }
     );
 
     if (!matchedApp) {

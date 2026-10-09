@@ -39,6 +39,7 @@ export default function ApplicationDetailModal({
 
   // Interview state
   const [showAddInterview, setShowAddInterview] = useState(false);
+  const [editingInterviewId, setEditingInterviewId] = useState(null);
   const [interviewForm, setInterviewForm] = useState({
     roundName: '',
     scheduledAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
@@ -112,9 +113,12 @@ export default function ApplicationDetailModal({
   const handleAddInterview = async (e) => {
     e.preventDefault();
     try {
-      const updated = await api.addInterview(application.id, interviewForm);
+      const updated = editingInterviewId
+        ? await api.updateInterview(application.id, editingInterviewId, interviewForm)
+        : await api.addInterview(application.id, interviewForm);
       onUpdateApplication(updated.data);
       setShowAddInterview(false);
+      setEditingInterviewId(null);
       setInterviewForm({
         roundName: '',
         scheduledAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
@@ -126,8 +130,23 @@ export default function ApplicationDetailModal({
         feedback: ''
       });
     } catch (err) {
-      alert('Error adding interview: ' + err.message);
+      alert(`Error ${editingInterviewId ? 'updating' : 'adding'} interview: ${err.message}`);
     }
+  };
+
+  const handleEditInterview = (round) => {
+    setEditingInterviewId(round.id);
+    setInterviewForm({
+      roundName: round.roundName || '',
+      scheduledAt: round.scheduledAt ? round.scheduledAt.slice(0, 16) : '',
+      duration: round.duration || '',
+      interviewers: round.interviewers || '',
+      meetingLink: round.meetingLink || '',
+      status: round.status || 'scheduled',
+      notes: round.notes || '',
+      feedback: round.feedback || ''
+    });
+    setShowAddInterview(true);
   };
 
   const handleToggleInterviewStatus = async (interviewId, currentStatus) => {
@@ -579,13 +598,15 @@ export default function ApplicationDetailModal({
               {/* Add Interview Form */}
               {showAddInterview && (
                 <form onSubmit={handleAddInterview} className="p-4 rounded-xl bg-indigo-950/30 border border-indigo-500/40 space-y-3">
-                  <h4 className="text-xs font-bold text-indigo-300 uppercase">New Interview Session</h4>
+                  <h4 className="text-xs font-bold text-indigo-300 uppercase">
+                    {editingInterviewId ? 'Edit Interview Session' : 'New Interview Session'}
+                  </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-medium text-slate-300 mb-1">Round Name *</label>
                       <input
                         type="text"
-                        required
+                        required={Boolean(!editingInterviewId || interviewForm.scheduledAt)}
                         placeholder="e.g. Round 2: System Design & Scalability"
                         value={interviewForm.roundName}
                         onChange={(e) => setInterviewForm({ ...interviewForm, roundName: e.target.value })}
@@ -647,7 +668,10 @@ export default function ApplicationDetailModal({
                   <div className="flex justify-end space-x-2 pt-2">
                     <button
                       type="button"
-                      onClick={() => setShowAddInterview(false)}
+                      onClick={() => {
+                        setShowAddInterview(false);
+                        setEditingInterviewId(null);
+                      }}
                       className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs"
                     >
                       Cancel
@@ -656,7 +680,7 @@ export default function ApplicationDetailModal({
                       type="submit"
                       className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
                     >
-                      Save Round
+                      {editingInterviewId ? 'Save Changes' : 'Save Round'}
                     </button>
                   </div>
                 </form>
@@ -705,7 +729,11 @@ export default function ApplicationDetailModal({
                             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 mt-1.5">
                               <span className="flex items-center space-x-1">
                                 <Calendar className="h-3.5 w-3.5 text-slate-500" />
-                                <span>{new Date(round.scheduledAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                                <span>
+                                  {round.scheduledAt
+                                    ? new Date(round.scheduledAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+                                    : 'Schedule not set'}
+                                </span>
                               </span>
                               {round.duration && <span>• {round.duration}</span>}
                               {round.interviewers && <span>• Interviewer: <strong className="text-slate-300">{round.interviewers}</strong></span>}
@@ -740,13 +768,22 @@ export default function ApplicationDetailModal({
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => handleDeleteInterview(round.id)}
-                          className="p-1.5 text-slate-500 hover:text-rose-400 transition"
-                          title="Delete round"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center space-x-1">
+                          <button
+                            onClick={() => handleEditInterview(round)}
+                            className="p-1.5 text-slate-500 hover:text-indigo-400 transition"
+                            title="Edit round"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteInterview(round.id)}
+                            className="p-1.5 text-slate-500 hover:text-rose-400 transition"
+                            title="Delete round"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))

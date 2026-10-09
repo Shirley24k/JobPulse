@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { ImapFlow } = require('imapflow');
 const { parseEmail } = require('./emailParser');
 
 // Sample simulated emails for testing & demonstration
@@ -158,6 +159,13 @@ class EmailService {
    * Fetch all syncable emails (from simulator or IMAP) and parse them
    */
   async syncEmails(settings) {
+    const imapUser = settings && (settings.imapUser || settings.smtpUser);
+    const imapPass = settings && (settings.imapPass || settings.smtpPass);
+
+    if (imapUser && imapPass) {
+      return await this.syncImapEmails(settings, imapUser, imapPass);
+    }
+
     const parsedResults = [];
 
     for (const email of this.simulatedInbox) {
@@ -166,6 +174,55 @@ class EmailService {
         id: email.id,
         ...parsed,
       });
+    }
+
+    return parsedResults;
+  }
+
+  async syncImapEmails(settings, user, pass) {
+    const client = new ImapFlow({
+      host: settings.imapHost || 'imap.gmail.com',
+      port: Number(settings.imapPort) || 993,
+      secure: true,
+      auth: { user, pass }
+    });
+
+    const parsedResults = [];
+    try {
+      await client.connect();
+      const lock = await client.getMailboxLock('INBOX');
+      try {
+        const checkpoint = settings.lastEmailSyncCheckpoint
+          ? new Date(settings.lastEmailSyncCheckpoint)
+          : new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const searchResults = await client.search({ since: checkpoint }, { uid: true });
+
+        for await (const message of client.fetch(searchResults, { envelope: true, uid: true }, { uid: true })) {
+          const sender = message.envelope.from && message.envelope.from[0];
+          const from = sender
+            ? `${sender.name ? `"${sender.name}" ` : ''}<${sender.address}>`
+            : '';
+          const parsed = parseEmail({
+            from,
+            subject: message.envelope.subject || '',
+            date: message.envelope.date ? message.envelope.date.toISOString() : undefined
+          });
+
+          parsedResults.push({
+            id: `imap-${message.uid}`,
+            ...parsed
+          });
+        }
+      } finally {
+        lock.release();
+      }
+    } catch (err) {
+      console.error('[Email Sync] IMAP fetch failed:', err.message);
+      throw new Error(`Unable to sync inbox via IMAP: ${err.message}`);
+    } finally {
+      if (client.usable) {
+        await client.logout();
+      }
     }
 
     return parsedResults;
