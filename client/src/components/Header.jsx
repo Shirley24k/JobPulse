@@ -22,7 +22,8 @@ export default function Header({
   onOpenEmailModal, 
   onOpenSettingsModal,
   onRunRulesCheck,
-  loadingCheck 
+  loadingCheck,
+  onLogout
 }) {
   const followUpCount = stats?.activeAlertsCount || 0;
   const upcomingInterviewsCount = stats?.upcomingInterviews?.length || 0;
@@ -104,6 +105,11 @@ export default function Header({
               className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700 transition"
             >
               <Settings className="h-4 w-4" />
+            </button>
+
+            <button onClick={onLogout} title="Sign out"
+              className="px-2.5 py-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700 transition text-xs">
+              Sign out
             </button>
 
             {/* Add Application Button */}

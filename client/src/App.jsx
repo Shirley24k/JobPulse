@@ -9,6 +9,7 @@ import ApplicationDetailModal from './components/ApplicationDetailModal';
 import NewApplicationModal from './components/NewApplicationModal';
 import EmailSyncModal from './components/EmailSyncModal';
 import SettingsModal from './components/SettingsModal';
+import LoginScreen from './components/LoginScreen';
 import { api } from './api';
 import { AlertTriangle, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 
@@ -19,6 +20,8 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [loadingCheck, setLoadingCheck] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Modals
   const [selectedApplication, setSelectedApplication] = useState(null);
@@ -48,8 +51,28 @@ export default function App() {
   }, [selectedApplication]);
 
   useEffect(() => {
-    fetchData();
+    api.getCurrentUser()
+      .then(response => setUser(response.data))
+      .catch(() => setUser(null))
+      .finally(() => setAuthLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (user) fetchData();
+  }, [user, fetchData]);
+
+  const handleLogin = async (username, password) => {
+    const response = await api.login(username, password);
+    setUser(response.data);
+    setLoading(true);
+  };
+
+  const handleLogout = async () => {
+    await api.logout();
+    setUser(null);
+    setApplications([]);
+    setStats(null);
+  };
 
   const handleRunRulesCheck = async () => {
     setLoadingCheck(true);
@@ -99,6 +122,11 @@ export default function App() {
 
   const followUpRequiredApps = applications.filter(a => a.needsFollowUp);
 
+  if (authLoading) {
+    return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-sm">Checking secure session...</div>;
+  }
+  if (!user) return <LoginScreen onLogin={handleLogin} />;
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-brand-500 selection:text-white">
       
@@ -112,6 +140,7 @@ export default function App() {
         onOpenSettingsModal={() => setShowSettingsModal(true)}
         onRunRulesCheck={handleRunRulesCheck}
         loadingCheck={loadingCheck}
+        onLogout={handleLogout}
       />
 
       {/* Alert Banner if any application needs 5-day follow up */}

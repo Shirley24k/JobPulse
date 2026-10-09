@@ -8,7 +8,8 @@
     "client": "npm.cmd --prefix client run dev",
     "dev": "concurrently --kill-others \"node server/server.js\" \"npm.cmd --prefix client run dev\"",
     "build": "npm.cmd --prefix client run build",
-    "start": "node server/server.js"
+    "start": "node server/server.js",
+    "generate-password-hash": "node server/generatePasswordHash.js"
   },
   "keywords": [
     "job-tracker",

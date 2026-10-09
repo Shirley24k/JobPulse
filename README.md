@@ -80,6 +80,45 @@ The SQLite database (`server/database.sqlite`) consists of **8 relational tables
    - Backend only: `node server/server.js`
    - Frontend only: `npm --prefix client run dev`
 
+## 🔐 Private sign-in and production hosting
+
+The app now uses a single private username/password account. Authentication is enforced by
+the Express API, not just by the React page, and the browser session is stored in an
+HTTP-only cookie. Do not put `AUTH_PASSWORD_HASH`, `SESSION_SECRET`, SMTP passwords, or
+the SQLite database in the frontend or in Git.
+
+### Configure sign-in locally
+
+1. Copy `.env.example` to `.env`.
+2. Generate a password hash:
+   ```bash
+   npm run generate-password-hash -- "use-a-long-unique-password"
+   ```
+3. Put the printed value in `AUTH_PASSWORD_HASH`, set `AUTH_USERNAME`, and set
+   `SESSION_SECRET` to a long random value.
+4. Restart the server after changing `.env`.
+
+### Recommended Netlify deployment
+
+Netlify is suitable for the React frontend, but it is not suitable for this app's current
+Express server, SQLite file, cron scheduler, or IMAP/SMTP worker. Deploy the two parts:
+
+1. **Backend:** deploy the repository's Node server to a persistent Node host such as
+   Render, Railway, or Fly.io. Set `NODE_ENV=production`, `AUTH_USERNAME`,
+   `AUTH_PASSWORD_HASH`, `SESSION_SECRET`, and `CLIENT_ORIGIN` to the exact Netlify URL.
+   Use a persistent disk for `server/database.sqlite`; otherwise redeploys can erase data.
+2. **Frontend:** connect the repository to Netlify. The included `netlify.toml` builds
+   `client` and publishes `client/dist`. Add the Netlify environment variable
+   `VITE_API_URL` with the public HTTPS URL of the backend (without `/api`).
+3. Enable HTTPS on both services. Because the production cookie is `Secure` and
+   `SameSite=None`, the frontend and backend must both use HTTPS.
+4. Restrict CORS by setting `CLIENT_ORIGIN` to only your Netlify site URL. Do not use `*`.
+
+This arrangement keeps the database and email credentials on the backend. Anyone can
+download the public frontend JavaScript, but they cannot retrieve applications or settings
+without the server session. For a multi-user product, replace the single environment
+account with a real user table and a persistent database such as Postgres.
+
 ---
 
 ## 🗄️ Viewing the Database in DBeaver

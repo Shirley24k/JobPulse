@@ -1,8 +1,9 @@
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api`;
 
 async function request(endpoint, options = {}) {
   try {
     const res = await fetch(`${API_BASE}${endpoint}`, {
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -21,6 +22,13 @@ async function request(endpoint, options = {}) {
 }
 
 export const api = {
+  login: (username, password) => request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  }),
+  getCurrentUser: () => request('/auth/me'),
+  logout: () => request('/auth/logout', { method: 'POST' }),
+
   // Applications
   getApplications: () => request('/applications'),
   getApplication: (id) => request(`/applications/${id}`),

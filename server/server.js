@@ -1,15 +1,75 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const cron = require('node-cron');
 const db = require('./db');
 const { calculateWorkingDays, calculateCalendarDays, evaluateApplicationRules } = require('./rulesEngine');
 const emailService = require('./emailService');
+const {
+  SESSION_TTL_SECONDS,
+  clearSessionCookie,
+  getConfig,
+  isConfigured,
+  requireAuth,
+  setSessionCookie,
+  signToken,
+  verifyPassword,
+} = require('./auth');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+const allowedOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+app.use(cors({
+  origin: allowedOrigin,
+  credentials: true,
+}));
 app.use(express.json());
+
+app.get('/api/auth/me', (req, res) => {
+  const sessionCookie = String(req.headers.cookie || '')
+    .split(';')
+    .map(item => item.trim())
+    .find(item => item.startsWith('jobpulse_session='));
+  const token = sessionCookie ? decodeURIComponent(sessionCookie.slice('jobpulse_session='.length)) : '';
+  const session = verifyToken(token);
+
+  if (!session) return res.status(401).json({ success: false, error: 'Not signed in.' });
+  res.json({ success: true, data: { username: session.username } });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const config = getConfig();
+  if (!isConfigured()) {
+    return res.status(503).json({
+      success: false,
+      error: 'Set AUTH_USERNAME, AUTH_PASSWORD_HASH, and SESSION_SECRET on the server before signing in.',
+    });
+  }
+
+  const { username, password } = req.body || {};
+  if (username !== config.username || !verifyPassword(password, config.passwordHash)) {
+    return res.status(401).json({ success: false, error: 'Invalid username or password.' });
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const token = signToken({
+    username: config.username,
+    iat: now,
+    exp: now + SESSION_TTL_SECONDS,
+  });
+  setSessionCookie(res, token);
+  res.json({ success: true, data: { username: config.username } });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  clearSessionCookie(res);
+  res.json({ success: true });
+});
+
+// All application data and mutations require an authenticated session.
+app.use('/api', requireAuth);
 
 // Helper to decorate application with live computed fields
 function decorateApplication(appRecord, settings) {
