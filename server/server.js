@@ -299,6 +299,159 @@ async function executeRulesCheck() {
   return results;
 }
 
+// ── Email Auto-Sync ──────────────────────────────────────────────────────────
+// Checkpoint: on first run, look back 24 hours. After each run, advance the
+// checkpoint to the moment that run started, so the next tick only reads
+// emails that arrived in the last 5-minute window.
+let lastEmailSyncCheckpoint = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+/**
+ * Fetches emails received since lastEmailSyncCheckpoint, parses them,
+ * matches each to an existing application by company name, and auto-applies
+ * status upgrades, interview details, and assessment records.
+ * Only actionable email types (interview, assessment, offer, rejection) trigger
+ * updates. The checkpoint advances to syncStartTime after every successful run.
+ */
+async function executeEmailAutoSync() {
+  // Capture the window boundaries before any async work
+  const syncStartTime = new Date();
+  const windowStart = lastEmailSyncCheckpoint;
+
+  const settings = await db.getSettings();
+  const allParsedEmails = await emailService.syncEmails(settings);
+
+  // Filter to only emails received within [windowStart, syncStartTime)
+  const parsedEmails = allParsedEmails.filter(parsed => {
+    if (!parsed.date) return false;
+    const emailTime = new Date(parsed.date);
+    return emailTime >= windowStart && emailTime < syncStartTime;
+  });
+
+  const allApps = await db.getAllApplications();
+
+  const results = {
+    windowStart: windowStart.toISOString(),
+    windowEnd: syncStartTime.toISOString(),
+    emailsInWindow: parsedEmails.length,
+    emailsProcessed: 0,
+    statusesUpdated: [],
+    interviewsAdded: [],
+    assessmentsAdded: [],
+    skipped: [],
+    timestamp: syncStartTime.toISOString()
+  };
+
+  console.log(`[Email Auto-Sync] Checking emails since ${windowStart.toISOString()} (${parsedEmails.length} in window)`);
+
+  // Statuses where an upgrade should be allowed (don't downgrade terminal states)
+  const upgradeableStatuses = ['applied', 'phone screening', 'assessment', 'interview'];
+  const terminalStatuses = ['offered', 'rejected', 'withdrawn', 'no response'];
+
+  // Email types that should trigger an auto-update
+  const actionableTypes = [
+    'interview_invitation',
+    'phone_screening',
+    'assessment_assigned',
+    'offer',
+    'rejection'
+  ];
+
+  for (const parsed of parsedEmails) {
+    const emailId = parsed.id;
+
+    // Skip non-actionable email types
+    if (!actionableTypes.includes(parsed.detectedType)) {
+      results.skipped.push({ emailId, reason: `non_actionable_type:${parsed.detectedType}` });
+      continue;
+    }
+
+    // Find a matching application by company name (case-insensitive)
+    const companyLower = (parsed.extractedCompany || '').toLowerCase();
+    const matchedApp = allApps.find(
+      a => a.company.toLowerCase() === companyLower && !terminalStatuses.includes(a.status)
+    );
+
+    if (!matchedApp) {
+      results.skipped.push({ emailId, reason: `no_matching_app_for:${parsed.extractedCompany}` });
+      continue;
+    }
+
+    // Don't downgrade status — only upgrade within the pipeline
+    const shouldUpdateStatus =
+      parsed.suggestedStatus &&
+      upgradeableStatuses.includes(matchedApp.status) &&
+      parsed.suggestedStatus !== matchedApp.status;
+
+    const updates = {
+      lastContactDate: new Date().toISOString(),
+      autoFollowUpAlertSent: false
+    };
+
+    if (shouldUpdateStatus) {
+      updates.status = parsed.suggestedStatus;
+      updates.lastStatusUpdateDate = new Date().toISOString();
+    }
+
+    await db.updateApplication(matchedApp.id, updates);
+
+    // Attach interview details if present
+    if (parsed.interviewDetails) {
+      await db.addInterview(matchedApp.id, parsed.interviewDetails);
+      results.interviewsAdded.push({
+        appId: matchedApp.id,
+        company: matchedApp.company,
+        roundName: parsed.interviewDetails.roundName
+      });
+    }
+
+    // Attach assessment details if present
+    if (parsed.assessmentDetails) {
+      await db.addAssessment(matchedApp.id, parsed.assessmentDetails);
+      results.assessmentsAdded.push({
+        appId: matchedApp.id,
+        company: matchedApp.company,
+        platform: parsed.assessmentDetails.platform
+      });
+    }
+
+    // Store the raw email thread on the application
+    await db.addEmailThread(matchedApp.id, {
+      subject: parsed.subject,
+      from: parsed.from,
+      date: parsed.date || new Date().toISOString(),
+      snippet: parsed.snippet,
+      fullBody: parsed.fullBody
+    });
+
+    const logMsg = shouldUpdateStatus
+      ? `[Auto Email Sync] Status updated to "${parsed.suggestedStatus}" for ${matchedApp.company} from email: "${parsed.subject}"`
+      : `[Auto Email Sync] Email linked to ${matchedApp.company} (status unchanged: "${matchedApp.status}")`;
+
+    await db.logActivity('email_auto_synced', logMsg, matchedApp.id);
+
+    if (shouldUpdateStatus) {
+      results.statusesUpdated.push({
+        appId: matchedApp.id,
+        company: matchedApp.company,
+        oldStatus: matchedApp.status,
+        newStatus: parsed.suggestedStatus,
+        emailSubject: parsed.subject
+      });
+    }
+
+    results.emailsProcessed++;
+  }
+
+  // Advance checkpoint to the start of this run so the next tick picks up from here
+  lastEmailSyncCheckpoint = syncStartTime;
+
+  if (results.statusesUpdated.length > 0 || results.interviewsAdded.length > 0) {
+    console.log(`[Email Auto-Sync] Updated ${results.statusesUpdated.length} application(s), added ${results.interviewsAdded.length} interview(s), ${results.assessmentsAdded.length} assessment(s).`);
+  }
+
+  return results;
+}
+
 // 10. Email Inbox Tracking & Recruiter Email Simulator
 app.get('/api/emails/inbox', async (req, res) => {
   try {
@@ -534,13 +687,18 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
-// Run rules check every 5 minutes in background
+// Run rules check + email auto-sync every 5 minutes in background
 cron.schedule('*/5 * * * *', async () => {
-  console.log('[Cron] Running scheduled 5-day follow-up & 14-day no-response checks...');
+  console.log('[Cron] Running scheduled checks: follow-up alerts, no-response rules, email auto-sync...');
   try {
     await executeRulesCheck();
   } catch (e) {
-    console.error('[Cron Error]', e);
+    console.error('[Cron Error - Rules]', e);
+  }
+  try {
+    await executeEmailAutoSync();
+  } catch (e) {
+    console.error('[Cron Error - Email Sync]', e);
   }
 });
 
@@ -550,11 +708,14 @@ app.listen(PORT, async () => {
   console.log(`🚀 TrackApply Pro API Server running on port ${PORT}`);
   console.log(`   Database: SQLite Relational Store (server/database.sqlite)`);
   console.log(`   Rules Engine: 5 working days alert + 14 days auto 'No response'`);
+  console.log(`   Email Auto-Sync: Interview/assessment detection on every cron tick`);
   console.log(`====================================================`);
   try {
     await db.initPromise;
-    const res = await executeRulesCheck();
-    console.log(`[Startup Check] Auto-rules initialized:`, res);
+    const rulesRes = await executeRulesCheck();
+    console.log(`[Startup Check] Auto-rules initialized:`, rulesRes);
+    const syncRes = await executeEmailAutoSync();
+    console.log(`[Startup Check] Email auto-sync complete:`, syncRes);
   } catch (e) {
     console.error('[Startup Check Error]', e);
   }
