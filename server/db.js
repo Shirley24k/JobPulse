@@ -152,6 +152,10 @@ class Database {
           value TEXT NOT NULL
         )
       `);
+      await this.run(
+        'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)',
+        ['lastEmailSyncCheckpoint', JSON.stringify(null)]
+      );
 
       // 7. Alerts Log Table
       await this.run(`
@@ -209,6 +213,7 @@ class Database {
       imapPort: 993,
       imapUser: '',
       imapPass: '',
+      lastEmailSyncCheckpoint: null,
       theme: 'dark'
     };
 

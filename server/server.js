@@ -300,13 +300,11 @@ async function executeRulesCheck() {
 }
 
 // ── Email Auto-Sync ──────────────────────────────────────────────────────────
-// Checkpoint: on first run, look back 24 hours. After each run, advance the
-// checkpoint to the moment that run started, so the next tick only reads
-// emails that arrived in the last 5-minute window.
-let lastEmailSyncCheckpoint = new Date(Date.now() - 24 * 60 * 60 * 1000);
+// Checkpoint is persisted in the settings table. A null checkpoint means this
+// is the first sync, so the initial window looks back 24 hours.
 
 /**
- * Fetches emails received since lastEmailSyncCheckpoint, parses them,
+ * Fetches emails received since the persisted sync checkpoint, parses them,
  * matches each to an existing application by company name, and auto-applies
  * status upgrades, interview details, and assessment records.
  * Only actionable email types (interview, assessment, offer, rejection) trigger
@@ -315,9 +313,11 @@ let lastEmailSyncCheckpoint = new Date(Date.now() - 24 * 60 * 60 * 1000);
 async function executeEmailAutoSync() {
   // Capture the window boundaries before any async work
   const syncStartTime = new Date();
-  const windowStart = lastEmailSyncCheckpoint;
-
   const settings = await db.getSettings();
+  const persistedCheckpoint = settings.lastEmailSyncCheckpoint;
+  const windowStart = persistedCheckpoint
+    ? new Date(persistedCheckpoint)
+    : new Date(syncStartTime.getTime() - 24 * 60 * 60 * 1000);
   const allParsedEmails = await emailService.syncEmails(settings);
 
   // Filter to only emails received within [windowStart, syncStartTime)
@@ -442,8 +442,8 @@ async function executeEmailAutoSync() {
     results.emailsProcessed++;
   }
 
-  // Advance checkpoint to the start of this run so the next tick picks up from here
-  lastEmailSyncCheckpoint = syncStartTime;
+  // Persist only after the full sync succeeds so a failed run can be retried.
+  await db.updateSettings({ lastEmailSyncCheckpoint: syncStartTime.toISOString() });
 
   if (results.statusesUpdated.length > 0 || results.interviewsAdded.length > 0) {
     console.log(`[Email Auto-Sync] Updated ${results.statusesUpdated.length} application(s), added ${results.interviewsAdded.length} interview(s), ${results.assessmentsAdded.length} assessment(s).`);
