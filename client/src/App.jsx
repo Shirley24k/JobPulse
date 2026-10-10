@@ -38,17 +38,12 @@ export default function App() {
       setApplications(appsRes.data || []);
       setStats(statsRes.data || null);
 
-      // If an application modal is open, refresh its data
-      if (selectedApplication) {
-        const fresh = (appsRes.data || []).find(a => a.id === selectedApplication.id);
-        if (fresh) setSelectedApplication(fresh);
-      }
     } catch (err) {
       console.error('Error fetching application data:', err);
     } finally {
       setLoading(false);
     }
-  }, [selectedApplication]);
+  }, []);
 
   useEffect(() => {
     api.getCurrentUser()

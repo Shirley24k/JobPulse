@@ -468,7 +468,10 @@ export default function ApplicationDetailModal({
                   <div className="flex justify-end space-x-2 pt-2">
                     <button
                       type="button"
-                      onClick={() => setIsEditing(false)}
+                      onClick={() => {
+                        setFormData({ ...application });
+                        setIsEditing(false);
+                      }}
                       className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium"
                     >
                       Cancel
