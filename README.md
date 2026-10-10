@@ -46,12 +46,12 @@ A comprehensive, production-ready platform designed to track job applications, a
 | ------------ | --------------------------------------------------------------------------- |
 | **Frontend** | React 19, Vite, Tailwind CSS v4, Lucide Icons, Canvas Confetti              |
 | **Backend**  | Node.js, Express, Node-Cron (background rules engine), Nodemailer           |
-| **Database** | **SQLite** (via `sqlite3` npm package) — file: `server/database.sqlite`     |
+| **Database** | **PostgreSQL** (via `pg`) — configured with `DATABASE_URL`                 |
 | **Email**    | Nodemailer (SMTP outbound), Smart Email Parser (regex + entity extraction)  |
 
-### Database Schema (SQLite)
+### Database Schema (PostgreSQL)
 
-The SQLite database (`server/database.sqlite`) consists of **8 relational tables**:
+The PostgreSQL database consists of **8 relational tables**:
 
 | Table              | Purpose                                                         |
 | ------------------ | --------------------------------------------------------------- |
@@ -85,7 +85,7 @@ The SQLite database (`server/database.sqlite`) consists of **8 relational tables
 The app now uses a single private username/password account. Authentication is enforced by
 the Express API, not just by the React page, and the browser session is stored in an
 HTTP-only cookie. Do not put `AUTH_PASSWORD_HASH`, `SESSION_SECRET`, SMTP passwords, or
-the SQLite database in the frontend or in Git.
+the PostgreSQL connection string in the frontend or in Git.
 
 ### Configure sign-in locally
 
@@ -95,26 +95,26 @@ the SQLite database in the frontend or in Git.
    npm run generate-password-hash -- "use-a-long-unique-password"
    ```
 3. Put the printed value in `AUTH_PASSWORD_HASH`, set `AUTH_USERNAME`, and set
-   `SESSION_SECRET` to a long random value.
+   `SESSION_SECRET` to a long random value. Set `DATABASE_URL` to your hosted
+   PostgreSQL connection string.
 4. Restart the server after changing `.env`.
 
 ### Recommended Netlify deployment
 
-Netlify is suitable for the React frontend, but it is not suitable for this app's current
-Express server, SQLite file, cron scheduler, or IMAP/SMTP worker. Deploy the two parts:
+Netlify is suitable for the React frontend, but it is not suitable for this app's
+Express server, database, cron scheduler, or IMAP/SMTP worker. Deploy the two parts:
 
-1. **Backend:** deploy the repository's Node server to a persistent Node host such as
-   Render, Railway, or Fly.io. Set `NODE_ENV=production`, `AUTH_USERNAME`,
-   `AUTH_PASSWORD_HASH`, `SESSION_SECRET`, and `CLIENT_ORIGIN` to the exact Netlify URL.
-   Use a persistent disk for `server/database.sqlite`; otherwise redeploys can erase data.
-   The repository includes an `.npmrc` setting that compiles the native `sqlite3` module
-   on the deployment host, avoiding incompatible prebuilt GLIBC binaries.
-2. **Frontend:** connect the repository to Netlify. The included `netlify.toml` builds
+1. **Database:** create a hosted PostgreSQL database with Neon, Supabase, or another
+   PostgreSQL provider. Copy its connection string into `DATABASE_URL` and keep it private.
+2. **Backend:** deploy the repository's Node server to Render. Set `NODE_ENV=production`,
+   `DATABASE_URL`, `AUTH_USERNAME`, `AUTH_PASSWORD_HASH`, `SESSION_SECRET`, and
+   `CLIENT_ORIGIN` to the exact Netlify URL. The application creates its tables on startup.
+3. **Frontend:** connect the repository to Netlify. The included `netlify.toml` builds
    `client` and publishes `client/dist`. Add the Netlify environment variable
    `VITE_API_URL` with the public HTTPS URL of the backend (without `/api`).
-3. Enable HTTPS on both services. Because the production cookie is `Secure` and
+4. Enable HTTPS on both services. Because the production cookie is `Secure` and
    `SameSite=None`, the frontend and backend must both use HTTPS.
-4. Restrict CORS by setting `CLIENT_ORIGIN` to only your Netlify site URL. Do not use `*`.
+5. Restrict CORS by setting `CLIENT_ORIGIN` to only your Netlify site URL. Do not use `*`.
 
 This arrangement keeps the database and email credentials on the backend. Anyone can
 download the public frontend JavaScript, but they cannot retrieve applications or settings
@@ -125,28 +125,26 @@ account with a real user table and a persistent database such as Postgres.
 
 ## 🗄️ Viewing the Database in DBeaver
 
-DBeaver is a free, universal database tool that can open and browse the SQLite file visually.
+DBeaver is a free, universal database tool that can connect to and browse the PostgreSQL database visually.
 
 ### Step 1 — Download & Install DBeaver
 1. Go to [https://dbeaver.io/download/](https://dbeaver.io/download/) and download the **Community Edition** (free).
 2. Run the installer and follow the on-screen steps.
 
-### Step 2 — Create a New SQLite Connection
+### Step 2 — Create a New PostgreSQL Connection
 1. Open DBeaver.
 2. Click **"New Database Connection"** (the plug icon in the top-left toolbar, or press `Ctrl+Shift+N`).
-3. In the **"Select your database"** dialog, search for **SQLite** and select it, then click **Next**.
+3. In the **"Select your database"** dialog, search for **PostgreSQL** and select it, then click **Next**.
 
-### Step 3 — Point to the Database File
-1. In the **Connection Settings** panel, click the **"Open..."** button next to the *Path* field.
-2. Navigate to your project folder and select:
-   ```
-   C:\JobApplication\server\database.sqlite
-   ```
-3. Click **Finish**. DBeaver may prompt you to download the SQLite JDBC driver — click **Download** to install it automatically.
+### Step 3 — Enter the Hosted Database Connection
+1. In the connection settings, enter the host, database, username, and password from your
+   provider, or paste the values from `DATABASE_URL`.
+2. Enable SSL if your provider requires it.
+3. Click **Finish**. DBeaver may prompt you to download the PostgreSQL JDBC driver.
 
 ### Step 4 — Browse the Data
 1. In the **Database Navigator** panel (left sidebar), expand your new connection.
-2. Expand: `database.sqlite` → `Tables`.
+2. Expand your PostgreSQL connection → `Schemas` → `public` → `Tables`.
 3. You will see all 8 tables listed:
    - `applications`, `interviews`, `assessments`, `email_threads`, `followup_history`, `settings`, `alerts`, `activity_logs`
 4. **Double-click any table** to open the Data viewer and see all records in a spreadsheet-style grid.
@@ -160,7 +158,8 @@ DBeaver is a free, universal database tool that can open and browse the SQLite f
 ### Step 5 — Refresh After App Updates
 - After the Node.js server writes new records, press **F5** (or right-click the table → **Refresh**) in DBeaver to see the latest data.
 
-> **Note:** The SQLite file is at `server/database.sqlite` in the project root. SQLite handles concurrent reads gracefully, so you can browse while the server is running.
+> **Note:** The backend creates the PostgreSQL tables automatically during startup. Use the
+> provider dashboard or DBeaver to inspect the data.
 
 ---
 

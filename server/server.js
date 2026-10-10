@@ -774,7 +774,7 @@ cron.schedule('*/5 * * * *', async () => {
 app.listen(PORT, async () => {
   console.log(`====================================================`);
   console.log(`🚀 TrackApply Pro API Server running on port ${PORT}`);
-  console.log(`   Database: SQLite Relational Store (server/database.sqlite)`);
+  console.log('   Database: PostgreSQL');
   console.log(`   Rules Engine: 5 working days alert + 14 days auto 'No response'`);
   console.log(`   Email Auto-Sync: Interview/assessment detection on every cron tick`);
   console.log(`====================================================`);

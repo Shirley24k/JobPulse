@@ -1,58 +1,50 @@
-const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
 const path = require('path');
 const fs = require('fs');
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'database.sqlite');
 const OLD_JSON_PATH = path.join(__dirname, 'data.json');
 
 class Database {
   constructor() {
-    this.initPromise = new Promise((resolve) => {
-      this.db = new sqlite3.Database(DB_PATH, async (err) => {
-        if (err) {
-          console.error('❌ Failed to connect to SQLite database:', err.message);
-        } else {
-          console.log(`✅ SQLite Database connected at: ${DB_PATH}`);
-          await this.init();
-          resolve();
-        }
-      });
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL is required. Configure a hosted PostgreSQL connection string.');
+    }
+
+    this.db = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+      max: 5
     });
+    this.initPromise = this.init()
+      .then(() => console.log('✅ PostgreSQL database connected and initialized'))
+      .catch((err) => {
+        console.error('❌ Failed to initialize PostgreSQL database:', err.message);
+        throw err;
+      });
   }
 
-  // Helper to run query with Promises
+  toPostgresQuery(sql) {
+    let index = 0;
+    return sql.replace(/\?/g, () => `$${++index}`);
+  }
+
   run(sql, params = []) {
-    return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function (err) {
-        if (err) reject(err);
-        else resolve({ lastID: this.lastID, changes: this.changes });
-      });
-    });
+    return this.db.query(this.toPostgresQuery(sql), params)
+      .then(result => ({ changes: result.rowCount }));
   }
 
   get(sql, params = []) {
-    return new Promise((resolve, reject) => {
-      this.db.get(sql, params, (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
+    return this.db.query(this.toPostgresQuery(sql), params)
+      .then(result => result.rows[0]);
   }
 
   all(sql, params = []) {
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, params, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows || []);
-      });
-    });
+    return this.db.query(this.toPostgresQuery(sql), params)
+      .then(result => result.rows);
   }
 
   async init() {
     try {
-      // Enable foreign keys
-      await this.run('PRAGMA foreign_keys = ON;');
-
       // 1. Applications Table
       await this.run(`
         CREATE TABLE IF NOT EXISTS applications (
@@ -153,7 +145,7 @@ class Database {
         )
       `);
       await this.run(
-        'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)',
+        'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT (key) DO NOTHING',
         ['lastEmailSyncCheckpoint', JSON.stringify(null)]
       );
 
@@ -187,7 +179,7 @@ class Database {
       // Seed initial data if empty
       await this.seedInitialData();
     } catch (err) {
-      console.error('Error during SQLite table initialization:', err);
+      console.error('Error during PostgreSQL table initialization:', err);
     }
   }
 
@@ -195,7 +187,7 @@ class Database {
     const existingApps = await this.all('SELECT COUNT(*) as count FROM applications');
     if (existingApps[0].count > 0) return;
 
-    console.log('🌱 Seeding initial records into SQLite relational database...');
+    console.log('🌱 Seeding initial records into PostgreSQL relational database...');
 
     // Default settings
     const defaultSettings = {
@@ -218,7 +210,8 @@ class Database {
     };
 
     for (const [k, v] of Object.entries(defaultSettings)) {
-      await this.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [k, JSON.stringify(v)]);
+      await this.run(      'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+      [k, JSON.stringify(v)]);
     }
 
     // Check if previous data.json exists to migrate
@@ -454,7 +447,7 @@ class Database {
       await this.createApplication(app);
     }
 
-    await this.logActivity('system', 'SQLite database initialized with relational schema and records.');
+    await this.logActivity('system', 'PostgreSQL database initialized with relational schema and records.');
   }
 
   // Helper to map DB row to Application Object
@@ -661,7 +654,7 @@ class Database {
   async addInterview(appId, interview) {
     const intId = interview.id || ('int-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4));
     const countRow = await this.get('SELECT COUNT(*) as count FROM interviews WHERE application_id = ?', [appId]);
-    const roundNumber = interview.roundNumber || (countRow.count + 1);
+    const roundNumber = interview.roundNumber || (Number(countRow.count) + 1);
 
     await this.run(`
       INSERT INTO interviews (
@@ -805,7 +798,7 @@ class Database {
 
   async updateSettings(newSettings) {
     for (const [key, value] of Object.entries(newSettings)) {
-      await this.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [
+      await this.run('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [
         key,
         JSON.stringify(value)
       ]);
