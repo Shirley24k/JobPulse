@@ -76,14 +76,16 @@ function decorateApplication(appRecord, settings) {
   if (!appRecord) return null;
   const refDate = appRecord.lastContactDate || appRecord.appliedDate || appRecord.createdAt;
   const workingDaysElapsed = calculateWorkingDays(refDate, new Date());
-  const calendarDaysElapsed = calculateCalendarDays(appRecord.appliedDate || refDate, new Date());
+  const calendarDaysElapsed = calculateCalendarDays(refDate, new Date());
   const evaluation = evaluateApplicationRules([appRecord], settings);
   const followUpAlert = evaluation.followUpAlertsNeeded[0];
   const noResponseThreshold = settings.noResponseThresholdCalendarDays || 14;
 
   const needsFollowUp = Boolean(followUpAlert);
 
-  const eligibleForNoResponse = appRecord.status === 'applied' && calendarDaysElapsed >= noResponseThreshold;
+  const terminalStatuses = ['no response', 'rejected', 'offered', 'withdrawn'];
+  const eligibleForNoResponse = !terminalStatuses.includes(appRecord.status) &&
+    calendarDaysElapsed >= noResponseThreshold;
 
   return {
     ...appRecord,
@@ -310,7 +312,7 @@ async function executeRulesCheck() {
   if (settings.autoMarkNoResponse !== false) {
     for (const update of evaluation.statusUpdatesNeeded) {
       const app = await db.getApplicationById(update.appId);
-      if (app && app.status === 'applied') {
+      if (app && !['no response', 'rejected', 'offered', 'withdrawn'].includes(app.status)) {
         await db.updateApplication(app.id, {
           status: 'no response',
           autoNoResponseTriggered: true,

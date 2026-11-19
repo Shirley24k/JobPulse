@@ -70,3 +70,38 @@ test('assessment stage starts from the latest past assigned date', () => {
 
   assert.equal(reference, '2026-11-17T00:00:00.000Z');
 });
+
+test('interview status becomes no response after 14 calendar days', () => {
+  const evaluation = evaluateApplicationRules([
+    {
+      id: 'app-1',
+      status: 'interview',
+      lastContactDate: '2026-11-01T12:00:00Z',
+      appliedDate: '2026-10-01T12:00:00Z',
+      autoNoResponseTriggered: false,
+    },
+  ], {
+    followUpThresholdWorkingDays: 5,
+    noResponseThresholdCalendarDays: 14,
+  });
+
+  assert.equal(evaluation.statusUpdatesNeeded.length, 1);
+  assert.equal(evaluation.statusUpdatesNeeded[0].appId, 'app-1');
+});
+
+test('terminal statuses are not moved to no response', () => {
+  const evaluation = evaluateApplicationRules([
+    {
+      id: 'app-offered',
+      status: 'offered',
+      lastContactDate: '2026-10-01T12:00:00Z',
+      appliedDate: '2026-09-01T12:00:00Z',
+      autoNoResponseTriggered: false,
+    },
+  ], {
+    followUpThresholdWorkingDays: 5,
+    noResponseThresholdCalendarDays: 14,
+  });
+
+  assert.equal(evaluation.statusUpdatesNeeded.length, 0);
+});

@@ -21,7 +21,7 @@ A comprehensive, production-ready platform designed to track job applications, a
 - **1-Click Tailored Follow-Up Composer**: Generates customized follow-up email drafts (*Polite Nudge*, *Post-Interview Check-in*, *Competing Offer / Urgent Timeline*, *Formal Inquiry*) with 1-click clipboard copy or "Mark as Sent" which resets the 5-day timer.
 
 ### 4. 2-Week Auto "No Response" Transition
-- Automatically evaluates applications in the `applied` stage. If 14 calendar days (2 weeks) pass without recruiter contact, the platform automatically transitions the status to **"No response"** and logs the event timestamp.
+- Evaluates every active pipeline status. If 14 calendar days pass without recruiter contact, the platform automatically transitions the application to **"No response"** and logs the event timestamp.
 
 ### 5. Multi-Round Interview & Assessment Manager
 - **Multiple Interview Sessions Tracker**: Track unlimited interview rounds per company (e.g. Round 1 Recruiter Screen, Round 2 Live Coding, Round 3 System Design, Round 4 Hiring Manager, Round 5 Executive). Includes Date/Time, Duration, Interviewers, Video Links with 1-click Join, Notes, and Feedback.

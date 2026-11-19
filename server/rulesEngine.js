@@ -94,9 +94,12 @@ function evaluateApplicationRules(applications, settings = {}) {
     const workingDaysElapsed = calculateWorkingDays(refDate, now);
     const calendarDaysElapsed = calculateCalendarDays(refDate, now);
 
-    // Rule 1: 14 Days (2 weeks) without response for 'applied' status -> auto mark 'no response'
+    const terminalStatuses = ['no response', 'rejected', 'offered', 'withdrawn'];
+    const isActivePipelineStatus = !terminalStatuses.includes(app.status);
+
+    // Rule 1: 14 calendar days without response -> auto mark 'no response'
     if (
-      app.status === 'applied' &&
+      isActivePipelineStatus &&
       calendarDaysElapsed >= noResponseThresholdCalendarDays &&
       !app.autoNoResponseTriggered
     ) {

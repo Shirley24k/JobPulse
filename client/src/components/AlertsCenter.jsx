@@ -62,7 +62,7 @@ export default function AlertsCenter({
             </h3>
             <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
               <strong>Rule 1 (5 Working Days):</strong> Sends alert email & flags applications when no update is received in 5 business days.<br/>
-              <strong>Rule 2 (14 Calendar Days):</strong> Automatically updates stale 'applied' applications to 'No response' status.
+              <strong>Rule 2 (14 Calendar Days):</strong> Automatically updates stale active applications to 'No response' status.
             </p>
           </div>
         </div>
