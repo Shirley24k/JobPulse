@@ -115,6 +115,11 @@ Express server, database, cron scheduler, or IMAP/SMTP worker. Deploy the two pa
 4. Enable HTTPS on both services. Because the production cookie is `Secure` and
    `SameSite=None`, the frontend and backend must both use HTTPS.
 5. Restrict CORS by setting `CLIENT_ORIGIN` to only your Netlify site URL. Do not use `*`.
+6. For follow-up reminders, keep the Render web service always on or use an external
+   scheduler to call `POST /api/rules/run-check` at regular intervals. The in-process
+   `node-cron` scheduler stops when a free Render instance sleeps. Configure the
+   recipient and SMTP settings in the app; without SMTP credentials, JobPulse records
+   a preview alert but cannot send an email to your inbox.
 
 This arrangement keeps the database and email credentials on the backend. Anyone can
 download the public frontend JavaScript, but they cannot retrieve applications or settings

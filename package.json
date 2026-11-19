@@ -5,11 +5,12 @@
   "main": "server/server.js",
   "scripts": {
     "server": "node server/server.js",
-    "client": "npm.cmd --prefix client run dev",
-    "dev": "concurrently --kill-others \"node server/server.js\" \"npm.cmd --prefix client run dev\"",
-    "build": "npm.cmd --prefix client run build",
+    "client": "npm --prefix client run dev",
+    "dev": "concurrently --kill-others \"node server/server.js\" \"npm --prefix client run dev\"",
+    "build": "npm --prefix client run build",
     "start": "node server/server.js",
-    "generate-password-hash": "node server/generatePasswordHash.js"
+    "generate-password-hash": "node server/generatePasswordHash.js",
+    "test": "node --test test/rulesEngine.test.js test/emailService.test.js"
   },
   "keywords": [
     "job-tracker",

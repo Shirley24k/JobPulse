@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const path = require('path');
 const fs = require('fs');
+const { getStageReferenceDate } = require('./rulesEngine');
 
 const OLD_JSON_PATH = path.join(__dirname, 'data.json');
 
@@ -603,6 +604,14 @@ class Database {
     const oldApp = await this.getApplicationById(id);
     if (!oldApp) return null;
 
+    const stageStatuses = ['phone screening', 'interview', 'assessment'];
+    const statusChanged = updates.status !== undefined && updates.status !== oldApp.status;
+    const statusCountsFromStageStart = statusChanged && stageStatuses.includes(updates.status);
+    const now = new Date().toISOString();
+    const statusReferenceDate = statusCountsFromStageStart
+      ? getStageReferenceDate(oldApp, updates.status, new Date(now))
+      : null;
+
     const company = updates.company !== undefined ? updates.company : oldApp.company;
     const role = updates.role !== undefined ? updates.role : oldApp.role;
     const status = updates.status !== undefined ? updates.status : oldApp.status;
@@ -610,15 +619,18 @@ class Database {
     const salary = updates.salary !== undefined ? updates.salary : oldApp.salary;
     const jobUrl = updates.jobUrl !== undefined ? updates.jobUrl : oldApp.jobUrl;
     const appliedDate = updates.appliedDate !== undefined ? updates.appliedDate : oldApp.appliedDate;
-    const lastContactDate = updates.lastContactDate !== undefined ? updates.lastContactDate : oldApp.lastContactDate;
+    const lastContactDate = updates.lastContactDate !== undefined
+      ? updates.lastContactDate
+      : (statusReferenceDate || oldApp.lastContactDate);
     const notes = updates.notes !== undefined ? updates.notes : oldApp.notes;
     const contactName = updates.contactName !== undefined ? updates.contactName : oldApp.contactName;
     const contactEmail = updates.contactEmail !== undefined ? updates.contactEmail : oldApp.contactEmail;
     const resumeVersion = updates.resumeVersion !== undefined ? updates.resumeVersion : oldApp.resumeVersion;
     const source = updates.source !== undefined ? updates.source : oldApp.source;
-    const autoFollowUpAlertSent = updates.autoFollowUpAlertSent !== undefined ? (updates.autoFollowUpAlertSent ? 1 : 0) : (oldApp.autoFollowUpAlertSent ? 1 : 0);
+    const autoFollowUpAlertSent = statusCountsFromStageStart
+      ? 0
+      : (updates.autoFollowUpAlertSent !== undefined ? (updates.autoFollowUpAlertSent ? 1 : 0) : (oldApp.autoFollowUpAlertSent ? 1 : 0));
     const autoNoResponseTriggered = updates.autoNoResponseTriggered !== undefined ? (updates.autoNoResponseTriggered ? 1 : 0) : (oldApp.autoNoResponseTriggered ? 1 : 0);
-    const now = new Date().toISOString();
     const lastStatusUpdateDate = (updates.status && updates.status !== oldApp.status) ? now : oldApp.lastStatusUpdateDate;
 
     await this.run(`
@@ -653,6 +665,8 @@ class Database {
   // Interview Management
   async addInterview(appId, interview) {
     const intId = interview.id || ('int-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4));
+    const application = await this.getApplicationById(appId);
+    if (!application) return null;
     const countRow = await this.get('SELECT COUNT(*) as count FROM interviews WHERE application_id = ?', [appId]);
     const roundNumber = interview.roundNumber || (Number(countRow.count) + 1);
 
@@ -676,9 +690,11 @@ class Database {
       new Date().toISOString()
     ]);
 
-    // Update app last contact
-    await this.run('UPDATE applications SET last_contact_date = ?, status = ? WHERE id = ?', [
-      new Date().toISOString(),
+    const updatedApplication = await this.getApplicationById(appId);
+    const stageReferenceDate = getStageReferenceDate(updatedApplication, 'interview');
+
+    await this.run('UPDATE applications SET last_contact_date = ?, status = ?, auto_followup_alert_sent = 0 WHERE id = ?', [
+      stageReferenceDate,
       'interview',
       appId
     ]);
@@ -709,6 +725,15 @@ class Database {
       appId
     ]);
 
+    const updatedApplication = await this.getApplicationById(appId);
+    if (updatedApplication.status === 'interview') {
+      const stageReferenceDate = getStageReferenceDate(updatedApplication, 'interview');
+      await this.run(
+        'UPDATE applications SET last_contact_date = ?, auto_followup_alert_sent = 0 WHERE id = ?',
+        [stageReferenceDate, appId]
+      );
+    }
+
     return await this.getApplicationById(appId);
   }
 
@@ -720,6 +745,8 @@ class Database {
   // Assessment Management
   async addAssessment(appId, assessment) {
     const assId = assessment.id || ('ass-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4));
+    const application = await this.getApplicationById(appId);
+    if (!application) return null;
 
     await this.run(`
       INSERT INTO assessments (
@@ -741,8 +768,11 @@ class Database {
       new Date().toISOString()
     ]);
 
-    await this.run('UPDATE applications SET last_contact_date = ?, status = ? WHERE id = ?', [
-      new Date().toISOString(),
+    const updatedApplication = await this.getApplicationById(appId);
+    const stageReferenceDate = getStageReferenceDate(updatedApplication, 'assessment');
+
+    await this.run('UPDATE applications SET last_contact_date = ?, status = ?, auto_followup_alert_sent = 0 WHERE id = ?', [
+      stageReferenceDate,
       'assessment',
       appId
     ]);
@@ -773,6 +803,15 @@ class Database {
       assId,
       appId
     ]);
+
+    const updatedApplication = await this.getApplicationById(appId);
+    if (updatedApplication.status === 'assessment') {
+      const stageReferenceDate = getStageReferenceDate(updatedApplication, 'assessment');
+      await this.run(
+        'UPDATE applications SET last_contact_date = ?, auto_followup_alert_sent = 0 WHERE id = ?',
+        [stageReferenceDate, appId]
+      );
+    }
 
     return await this.getApplicationById(appId);
   }

@@ -77,14 +77,11 @@ function decorateApplication(appRecord, settings) {
   const refDate = appRecord.lastContactDate || appRecord.appliedDate || appRecord.createdAt;
   const workingDaysElapsed = calculateWorkingDays(refDate, new Date());
   const calendarDaysElapsed = calculateCalendarDays(appRecord.appliedDate || refDate, new Date());
-  
-  const followUpThreshold = settings.followUpThresholdWorkingDays || 5;
+  const evaluation = evaluateApplicationRules([appRecord], settings);
+  const followUpAlert = evaluation.followUpAlertsNeeded[0];
   const noResponseThreshold = settings.noResponseThresholdCalendarDays || 14;
 
-  const needsFollowUp = ['applied', 'phone screening', 'interview', 'assessment'].includes(appRecord.status) &&
-    workingDaysElapsed >= followUpThreshold &&
-    !appRecord.autoFollowUpAlertSent &&
-    !['no response', 'rejected', 'offered', 'withdrawn'].includes(appRecord.status);
+  const needsFollowUp = Boolean(followUpAlert);
 
   const eligibleForNoResponse = appRecord.status === 'applied' && calendarDaysElapsed >= noResponseThreshold;
 
@@ -342,16 +339,19 @@ async function executeRulesCheck() {
           settings
         });
 
-        await db.updateApplication(app.id, { autoFollowUpAlertSent: true });
         await db.addAlert(alertRecord);
-        await db.logActivity('alert_triggered', `Sent 5-working-day follow-up alert email for ${app.company}`, app.id);
-        
-        results.alertsSent.push({
-          appId: app.id,
-          company: app.company,
-          workingDaysElapsed: alertInfo.workingDaysElapsed,
-          alertId: alertRecord.id
-        });
+        if (alertRecord.status === 'sent_successfully' || alertRecord.status === 'simulated_and_stored') {
+          await db.updateApplication(app.id, { autoFollowUpAlertSent: true });
+          await db.logActivity('alert_triggered', `Created 5-working-day follow-up alert for ${app.company}`, app.id);
+          results.alertsSent.push({
+            appId: app.id,
+            company: app.company,
+            workingDaysElapsed: alertInfo.workingDaysElapsed,
+            alertId: alertRecord.id
+          });
+        } else {
+          await db.logActivity('alert_failed', `Could not send 5-working-day follow-up alert for ${app.company}`, app.id);
+        }
       }
     }
   }
@@ -653,7 +653,14 @@ app.get('/api/activity-logs', async (req, res) => {
 app.get('/api/settings', async (req, res) => {
   try {
     const settings = await db.getSettings();
-    res.json({ success: true, data: settings });
+    res.json({
+      success: true,
+      data: {
+        ...settings,
+        smtpPass: settings.smtpPass ? '••••••••' : '',
+        imapPass: settings.imapPass ? '••••••••' : ''
+      }
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -661,8 +668,46 @@ app.get('/api/settings', async (req, res) => {
 
 app.put('/api/settings', async (req, res) => {
   try {
-    const updated = await db.updateSettings(req.body);
-    res.json({ success: true, data: updated });
+    const allowedKeys = [
+      'alertEmail',
+      'followUpThresholdWorkingDays',
+      'noResponseThresholdCalendarDays',
+      'autoSendFollowUpAlerts',
+      'autoMarkNoResponse',
+      'smtpHost',
+      'smtpPort',
+      'smtpUser',
+      'smtpPass',
+      'smtpSecure',
+      'imapHost',
+      'imapPort',
+      'imapUser',
+      'imapPass',
+      'theme'
+    ];
+    const safeSettings = {};
+    for (const key of allowedKeys) {
+      if (Object.prototype.hasOwnProperty.call(req.body || {}, key)) {
+        safeSettings[key] = req.body[key];
+      }
+    }
+
+    if (safeSettings.smtpPass === '••••••••') {
+      delete safeSettings.smtpPass;
+    }
+    if (safeSettings.imapPass === '••••••••') {
+      delete safeSettings.imapPass;
+    }
+
+    const updated = await db.updateSettings(safeSettings);
+    res.json({
+      success: true,
+      data: {
+        ...updated,
+        smtpPass: updated.smtpPass ? '••••••••' : '',
+        imapPass: updated.imapPass ? '••••••••' : ''
+      }
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -773,7 +818,7 @@ cron.schedule('*/5 * * * *', async () => {
 // Start Express Server
 app.listen(PORT, async () => {
   console.log(`====================================================`);
-  console.log(`🚀 TrackApply Pro API Server running on port ${PORT}`);
+  console.log(`🚀 JobPulse API Server running on port ${PORT}`);
   console.log('   Database: PostgreSQL');
   console.log(`   Rules Engine: 5 working days alert + 14 days auto 'No response'`);
   console.log(`   Email Auto-Sync: Interview/assessment detection on every cron tick`);

@@ -44,6 +44,36 @@ function calculateCalendarDays(startDate, endDate = new Date()) {
   return Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
 }
 
+function getStageReferenceDate(application, newStatus, now = new Date()) {
+  if (newStatus === 'interview' && Array.isArray(application.interviews)) {
+    const dates = application.interviews
+      .map(interview => interview.scheduledAt)
+      .filter(Boolean)
+      .map(date => new Date(date))
+      .filter(date => !Number.isNaN(date.getTime()));
+
+    const pastDates = dates.filter(date => date <= now).sort((a, b) => b - a);
+    if (pastDates.length > 0) return pastDates[0].toISOString();
+  }
+
+  if (newStatus === 'assessment' && Array.isArray(application.assessments)) {
+    const dates = application.assessments
+      .map(assessment => assessment.assignedDate)
+      .filter(Boolean)
+      .map(date => new Date(date))
+      .filter(date => !Number.isNaN(date.getTime()));
+
+    const pastDates = dates.filter(date => date <= now).sort((a, b) => b - a);
+    if (pastDates.length > 0) return pastDates[0].toISOString();
+  }
+
+  if (['phone screening', 'interview', 'assessment'].includes(newStatus)) {
+    return new Date(now).toISOString();
+  }
+
+  return null;
+}
+
 /**
  * Evaluates rules on all applications and returns triggered actions
  * 1. 5 working days no response -> follow-up alert
@@ -85,7 +115,6 @@ function evaluateApplicationRules(applications, settings = {}) {
     if (
       isAwaitingResponse &&
       workingDaysElapsed >= followUpThresholdWorkingDays &&
-      !app.autoFollowUpAlertSent &&
       app.status !== 'no response' &&
       app.status !== 'rejected' &&
       app.status !== 'offered' &&
@@ -111,5 +140,6 @@ function evaluateApplicationRules(applications, settings = {}) {
 module.exports = {
   calculateWorkingDays,
   calculateCalendarDays,
+  getStageReferenceDate,
   evaluateApplicationRules,
 };

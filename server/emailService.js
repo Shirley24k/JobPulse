@@ -52,7 +52,7 @@ class EmailService {
    */
   getTransporter(settings) {
     if (settings && settings.smtpHost && settings.smtpUser && settings.smtpPass) {
-      return nodemailer.createTransporter({
+      return nodemailer.createTransport({
         host: settings.smtpHost,
         port: parseInt(settings.smtpPort) || 587,
         secure: settings.smtpSecure || false,
@@ -92,7 +92,7 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>CareerPilot Application Alert</h1>
+            <h1>JobPulse Application Alert</h1>
           </div>
           <div class="content">
             <span class="badge">${workingDaysElapsed} WORKING DAYS ELAPSED</span>
@@ -110,11 +110,11 @@ class EmailService {
             <p style="color: #cbd5e1; font-size: 14px;">Sending a polite, concise follow-up email increases your response rate by up to 40%.</p>
             
             <div style="margin-top: 20px; text-align: center;">
-              <a href="http://localhost:5173" class="btn">Open Job Tracker & Send Follow-up</a>
+              <a href="${process.env.CLIENT_ORIGIN || 'http://localhost:5173'}" class="btn">Open JobPulse & Send Follow-up</a>
             </div>
           </div>
           <div class="footer">
-            Tracked automatically by TrackApply Pro • Configured alert threshold: 5 working days
+            Tracked automatically by JobPulse • Configured alert threshold: 5 working days
           </div>
         </div>
       </body>
@@ -136,7 +136,7 @@ class EmailService {
     if (transporter) {
       try {
         await transporter.sendMail({
-          from: `"TrackApply Alerts" <${settings.smtpUser}>`,
+          from: `"JobPulse Alerts" <${settings.smtpUser}>`,
           to: toEmail || settings.alertEmail,
           subject,
           html: htmlContent,
