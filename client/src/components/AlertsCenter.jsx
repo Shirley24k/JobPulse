@@ -252,10 +252,16 @@ export default function AlertsCenter({
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 bg-slate-950">
-              <div 
-                dangerouslySetInnerHTML={{ __html: previewAlert.htmlPreview }} 
-                className="rounded-lg overflow-hidden border border-slate-800"
-              />
+              {previewAlert.htmlPreview ? (
+                <div
+                  dangerouslySetInnerHTML={{ __html: previewAlert.htmlPreview }}
+                  className="rounded-lg overflow-hidden border border-slate-800"
+                />
+              ) : (
+                <div className="p-6 rounded-lg border border-slate-800 text-center text-sm text-slate-400">
+                  No email HTML preview is available for this alert.
+                </div>
+              )}
             </div>
           </div>
         </div>

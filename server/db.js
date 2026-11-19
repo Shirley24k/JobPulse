@@ -868,7 +868,19 @@ class Database {
   }
 
   async getAlerts() {
-    return await this.all('SELECT * FROM alerts ORDER BY sent_at DESC');
+    const rows = await this.all('SELECT * FROM alerts ORDER BY sent_at DESC');
+    return rows.map(row => ({
+      id: row.id,
+      appId: row.application_id || '',
+      company: row.company || '',
+      recipient: row.recipient || '',
+      subject: row.subject || '',
+      workingDaysElapsed: row.working_days_elapsed || 0,
+      htmlPreview: row.html_preview || '',
+      mode: row.mode || 'local_sandbox',
+      status: row.status || 'recorded',
+      sentAt: row.sent_at
+    }));
   }
 
   async logActivity(type, message, appId = null) {
